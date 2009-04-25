@@ -2,6 +2,7 @@
 # these values:
 
 BLESSED_USER       = "your_name"  # the bot only listens to one user.
+BOT_NAME           = "ircamp"
 IRC_CHANNEL        = "private_room"
 CAMPFIRE_SUBDOMAIN = "mycompany"
 CAMPFIRE_ROOM      = "The Good Room"

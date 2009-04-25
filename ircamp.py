@@ -24,10 +24,11 @@ class CampfireBot(object):
     def __getattr__(self, name):
         return getattr(self.room, name)
 
+
 class IRCBot(irc.IRCClient):
     """The IRC part of the IRC <-> Campfire bridge."""
 
-    nickname = "ircamp"
+    nickname = BOT_NAME
 
     # twisted callbacks
 
@@ -67,6 +68,7 @@ class IRCBot(irc.IRCClient):
 
         print "%s <%s> %s" % (channel, user, msg)
 
+
 class IRCBotFactory(protocol.ClientFactory):
     """
     A factory for IRCBot.
@@ -90,6 +92,7 @@ class IRCBotFactory(protocol.ClientFactory):
     def clientConnectionFailed(self, connector, reason):
         print "connection failed:", reason
         reactor.stop()
+
 
 if __name__ == '__main__':
     f = IRCBotFactory()
