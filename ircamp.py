@@ -6,6 +6,9 @@ from twisted.python import log
 # pinder
 import pinder
 
+# BeautifulSoup
+from BeautifulSoup import BeautifulSoup
+
 # config
 from settings import *
 
