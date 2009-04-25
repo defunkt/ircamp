@@ -16,6 +16,7 @@ class CampfireBot(object):
         self.client = pinder.Campfire(subdomain)
         self.client.login(email, password)
         self.room = self.client.find_room_by_name(room)
+        self.room.join()
 
     def logout(self):
         self.room.leave()
