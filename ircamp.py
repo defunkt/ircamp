@@ -6,9 +6,6 @@ from twisted.python import log
 # pinder
 import pinder
 
-# system
-import sys, getpass
-
 # config
 from settings import *
 
