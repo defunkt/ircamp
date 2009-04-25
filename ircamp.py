@@ -15,8 +15,7 @@ from settings import *
 class CampfireBot(object):
     """The Campfire part of the IRC <-> Campfire bridge."""
 
-    def __init__(self, irc, subdomain, room, email, password):
-        self.irc = irc
+    def __init__(self, subdomain, room, email, password):
         self.client = pinder.Campfire(subdomain)
         self.client.login(email, password)
         self.room = self.client.find_room_by_name(room)
@@ -37,7 +36,7 @@ class IRCBot(irc.IRCClient):
 
     def connectionMade(self):
         irc.IRCClient.connectionMade(self)
-        self.campfire = CampfireBot(self, self.factory.subdomain, self.factory.room, self.factory.email, self.factory.password)
+        self.campfire = CampfireBot(self.factory.subdomain, self.factory.room, self.factory.email, self.factory.password)
         self.channel = '#%s' % self.factory.channel
         self.lc = task.LoopingCall(self.new_messages_from_campfire)
         self.lc.start(5, False)
