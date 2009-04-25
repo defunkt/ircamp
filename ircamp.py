@@ -47,7 +47,9 @@ class IRCBot(irc.IRCClient):
     def new_messages_from_campfire(self):
         self.campfire.ping()
         for message in self.campfire.messages():
-            self.msg(self.channel, "%s: %s" % (message['person'], message['message']))
+            msg = "%s: %s" % (message['person'], message['message'])
+            self.msg(self.channel, msg)
+            self.log(self.channel, self.nickname, msg)
 
     # irc callbacks
 
@@ -67,6 +69,9 @@ class IRCBot(irc.IRCClient):
         if user == BLESSED_USER:
             self.campfire.speak(msg)
 
+        self.log(channel, user, msg)
+
+    def log(self, channel, user, msg):
         print "%s <%s> %s" % (channel, user, msg)
 
 
