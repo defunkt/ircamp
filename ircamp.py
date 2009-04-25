@@ -13,6 +13,8 @@ class CampfireBot(object):
     """The Campfire part of the IRC <-> Campfire bridge."""
 
     def __init__(self, subdomain, room, email, password):
+        self.subdomain = subdomain
+        self.email = email
         self.client = pinder.Campfire(subdomain)
         self.client.login(email, password)
         self.room = self.client.find_room_by_name(room)
@@ -21,6 +23,10 @@ class CampfireBot(object):
     def logout(self):
         self.room.leave()
         self.client.logout()
+
+    def __str__(self):
+        return "<%s.campfirenow.com: %s as %s>" % (self.subdomain,
+                                                   self.room, self.email)
 
     def __getattr__(self, name):
         return getattr(self.room, name)
@@ -71,8 +77,13 @@ class IRCBot(irc.IRCClient):
 
         self.log(channel, user, msg)
 
+    # other bot methods
+
     def log(self, channel, user, msg):
         print "%s <%s> %s" % (channel, user, msg)
+
+    def __str__(self):
+        return "<%s: %s as %s>" % (IRC_SERVER, self.channel, self.nickname)
 
 
 class IRCBotFactory(protocol.ClientFactory):
