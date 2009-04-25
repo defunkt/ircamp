@@ -35,6 +35,40 @@ class CampfireBot(object):
         return getattr(self.room, name)
 
 
+# message filters
+
+class CampfireMessageFilter(object):
+    def __init__(self, message, soup):
+        self.message = message
+        self.soup = soup
+
+    @classmethod
+    def filter_message(cls, message):
+        soup = BeautifulSoup(message['message'].decode('unicode_escape'))
+        for subclass in CampfireMessageFilter.__subclasses__():
+            message = subclass(message, soup).filter()
+        return message
+
+    def filter(self):
+        return self.message
+
+
+class ImageFilter(CampfireMessageFilter):
+    def filter(self):
+        image = self.soup.find('img')
+        if image:
+            self.message['message'] = str(image['src'])
+        return self.message
+
+
+class LinkFilter(CampfireMessageFilter):
+    def filter(self):
+        link = self.soup.find('a')
+        if link and len(self.soup.findAll(True)) == 1:
+            self.message['message'] = str(link['href'])
+        return self.message
+
+
 class IRCBot(irc.IRCClient):
     """The IRC part of the IRC <-> Campfire bridge."""
 
@@ -44,7 +78,8 @@ class IRCBot(irc.IRCClient):
 
     def connectionMade(self):
         irc.IRCClient.connectionMade(self)
-        self.campfire = CampfireBot(self.factory.subdomain, self.factory.room, self.factory.email, self.factory.password)
+        self.campfire = CampfireBot(self.factory.subdomain, self.factory.room,
+                                    self.factory.email, self.factory.password)
         self.channel = '#%s' % self.factory.channel
         self.lc = task.LoopingCall(self.new_messages_from_campfire)
         self.lc.start(5, False)
@@ -56,6 +91,7 @@ class IRCBot(irc.IRCClient):
     def new_messages_from_campfire(self):
         self.campfire.ping()
         for message in self.campfire.messages():
+            message = CampfireMessageFilter.filter_message(message)
             msg = "%s: %s" % (message['person'], message['message'])
             self.msg(self.channel, msg)
             self.log(self.channel, self.nickname, msg)
