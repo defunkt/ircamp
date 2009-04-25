@@ -46,6 +46,7 @@ class IRCBot(irc.IRCClient):
         self.campfire.logout()
 
     def new_messages_from_campfire(self):
+        self.campfire.ping()
         for message in self.campfire.messages():
             self.msg(self.channel, "%s: %s" % (message['person'], message['message']))
 
