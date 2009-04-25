@@ -4,8 +4,8 @@ IRCamp: IRC <-> Campfire Bridge
 IRCamp allows you to use Campfire from the comfort of your favorite IRC 
 client by acting as a thin bridge between the two services.
 
-It's currently a work in progress. I'm pretty sure it can't stay 
-connected to Campfire very long. Working on this.
+Right now only the basic bridge is completed. Check the [issues][1]
+for future plans.
 
 Requirements
 ------------
@@ -54,8 +54,10 @@ Usage
 Bugs! Features!
 ---------------
 
-Please add them to http://github.com/defunkt/ircamp/issues
+Please add them to [the ircamp issues][1].
 
 Thanks.
 
 Chris Wanstrath // chris@ozmm.org
+
+[1]: http://github.com/defunkt/ircamp/issues
