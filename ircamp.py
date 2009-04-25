@@ -42,8 +42,8 @@ class CampfireMessageFilter(object):
         self.message = message
         self.soup = soup
 
-    @classmethod
-    def filter_message(cls, message):
+    @staticmethod
+    def filter_message(message):
         soup = BeautifulSoup(message['message'].decode('unicode_escape'))
         for subclass in CampfireMessageFilter.__subclasses__():
             message = subclass(message, soup).filter()
