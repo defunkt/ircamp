@@ -1,3 +1,6 @@
+# sys
+import re
+
 # twisted
 from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol, task
@@ -37,20 +40,35 @@ class CampfireBot(object):
 
 # message filters
 
-class CampfireMessageFilter(object):
-    def __init__(self, message, soup):
+class MessageFilter(object):
+    def __init__(self, message):
         self.message = message
-        self.soup = soup
 
-    @staticmethod
-    def filter_message(message):
-        soup = BeautifulSoup(message['message'].decode('unicode_escape'))
-        for subclass in CampfireMessageFilter.__subclasses__():
-            message = subclass(message, soup).filter()
+    @classmethod
+    def filter_message(cls, message):
+        for subclass in cls.__subclasses__():
+            message = subclass(message).filter()
         return message
 
     def filter(self):
         return self.message
+
+
+class IRCMessageFilter(MessageFilter):
+    pass
+
+class TwitterFilter(IRCMessageFilter):
+    def filter(self):
+        if 'twitter.com/' in self.message:
+            id = re.search(r'(\d+)', self.message).group(0)
+            self.message = 'http://twictur.es/i/%s.gif' % id
+        return self.message
+
+
+class CampfireMessageFilter(MessageFilter):
+    def __init__(self, message):
+        self.message = message
+        self.soup = BeautifulSoup(message['message'].decode('unicode_escape'))
 
 
 class ImageFilter(CampfireMessageFilter):
@@ -67,7 +85,6 @@ class ImageFilter(CampfireMessageFilter):
 
     def twicture_url(self, image):
         return image.replace('/i/', '/r/').replace('.gif', '')
-
 
 
 class LinkFilter(CampfireMessageFilter):
@@ -121,6 +138,7 @@ class IRCBot(irc.IRCClient):
         user = user.split('!')[0]
 
         if user == BLESSED_USER:
+            msg = IRCMessageFilter.filter_message(msg)
             self.campfire.speak(msg)
 
         self.log(channel, user, msg)
