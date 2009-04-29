@@ -21,6 +21,7 @@ class CampfireBot(object):
     """The Campfire part of the IRC <-> Campfire bridge."""
 
     def __init__(self, subdomain, room, email, password):
+        self.host = "http://%s.campfirenow.com" % subdomain
         self.subdomain = subdomain
         self.email = email
         self.client = pinder.Campfire(subdomain)
@@ -29,8 +30,7 @@ class CampfireBot(object):
         self.room.join()
 
     def __str__(self):
-        return "<%s.campfirenow.com: %s as %s>" % (self.subdomain,
-                                                   self.room, self.email)
+        return "<%s: %s as %s>" % (self.host, self.room, self.email)
 
     def __getattr__(self, name):
         return getattr(self.room, name)
@@ -40,10 +40,9 @@ class CampfireBot(object):
         self.client.logout()
 
     def todays_transcript_url(self):
-        host = "http://%s.campfirenow.com" % self.subdomain
         path = '/room/%s/transcript/%s' % (self.id,
                                            datetime.now().strftime('%Y/%m/%d'))
-        return host + path
+        return self.host + path
 
 
 # message filters
