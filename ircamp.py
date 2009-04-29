@@ -56,9 +56,18 @@ class CampfireMessageFilter(object):
 class ImageFilter(CampfireMessageFilter):
     def filter(self):
         image = self.soup.find('img')
+
         if image:
-            self.message['message'] = str(image['src'])
+            url = str(image['src'])
+            if "twictur.es" in url:
+                url = self.twicture_url(url)
+            self.message['message'] = url
+
         return self.message
+
+    def twicture_url(self, image):
+        return image.replace('/i/', '/r/').replace('.gif', '')
+
 
 
 class LinkFilter(CampfireMessageFilter):
