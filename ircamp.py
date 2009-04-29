@@ -270,10 +270,10 @@ class IRCCommands(object):
     e.g.
 
     <defunkt> bot: help
-    calls: bot.help()
+    calls: bot.help([])
 
     <defunkt> bot: guest on
-    calls: bot.guest('on')
+    calls: bot.guest(['on'])
 
     Returning a non-empty string replies to the channel.
     """
