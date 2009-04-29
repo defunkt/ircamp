@@ -79,6 +79,17 @@ class CampfireMessageFilter(MessageFilter):
         self.soup = BeautifulSoup(message['message'].decode('unicode_escape'))
 
 
+class PasteFilter(CampfireMessageFilter):
+    def filter(self):
+        paste = self.soup.find('pre')
+        if paste:
+            url = self.soup.find('a')['href']
+            # hax
+            host = "http://%s.campfirenow.com" % CAMPFIRE_SUBDOMAIN
+            self.message['message'] = host + url
+        return self.message
+
+
 class ImageFilter(CampfireMessageFilter):
     def filter(self):
         image = self.soup.find('img')
