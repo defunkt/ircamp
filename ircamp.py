@@ -298,6 +298,9 @@ class IRCCommands(object):
     def users(self, args):
         return ', '.join(self.campfire.users())
 
+    def transcript(self, args):
+        return self.campfire.todays_transcript_url()
+
 
 if __name__ == '__main__':
     f = IRCBotFactory()
