@@ -1,6 +1,7 @@
 # sys
 import re
 from htmlentitydefs import name2codepoint as n2cp
+from datetime import datetime
 
 # twisted
 from twisted.words.protocols import irc
@@ -27,16 +28,22 @@ class CampfireBot(object):
         self.room = self.client.find_room_by_name(room)
         self.room.join()
 
-    def logout(self):
-        self.room.leave()
-        self.client.logout()
-
     def __str__(self):
         return "<%s.campfirenow.com: %s as %s>" % (self.subdomain,
                                                    self.room, self.email)
 
     def __getattr__(self, name):
         return getattr(self.room, name)
+
+    def logout(self):
+        self.room.leave()
+        self.client.logout()
+
+    def todays_transcript_url(self):
+        host = "http://%s.campfirenow.com" % self.subdomain
+        path = '/room/%s/transcript/%s' % (self.id,
+                                           datetime.now().strftime('%Y/%m/%d'))
+        return host + path
 
 
 # message filters
@@ -57,6 +64,7 @@ class MessageFilter(object):
 
 class IRCMessageFilter(MessageFilter):
     pass
+
 
 class TwitterFilter(IRCMessageFilter):
     def filter(self):
@@ -121,8 +129,7 @@ class IRCBot(irc.IRCClient):
             message = CampfireMessageFilter.filter_message(message)
             msg = "%s: %s" % (message['person'], message['message'])
             msg = self.decode_htmlentities(msg.decode('unicode_escape'))
-            self.msg(self.channel, str(msg))
-            self.log(self.channel, self.nickname, msg)
+            self.speak(msg)
 
     # irc callbacks
 
@@ -130,8 +137,9 @@ class IRCBot(irc.IRCClient):
         self.join(self.channel)
 
     def joined(self, channel):
-        self.msg(channel, "I'm room '%s' in the %s campfire." %
-                 (self.factory.room, self.factory.subdomain))
+        self.speak("Room '%s' in %s: %s" %
+                   (self.factory.room, self.factory.subdomain,
+                    self.campfire.todays_transcript_url()))
 
     def irc_PING(self, prefix, params):
         irc.IRCClient.irc_PING(self, prefix, params)
@@ -147,6 +155,10 @@ class IRCBot(irc.IRCClient):
         self.log(channel, user, msg)
 
     # other bot methods
+
+    def speak(self, message):
+        self.msg(self.channel, str(message))
+        self.log(self.channel, self.nickname, message)
 
     def log(self, channel, user, msg):
         print "%s <%s> %s" % (channel, user, msg)
@@ -178,6 +190,7 @@ class IRCBot(irc.IRCClient):
 
         entity_re = re.compile(r'&(#?)(x?)(\w+);')
         return entity_re.subn(substitute_entity, string)[0]
+
 
 class IRCBotFactory(protocol.ClientFactory):
     """
