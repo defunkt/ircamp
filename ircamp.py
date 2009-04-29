@@ -1,5 +1,6 @@
 # sys
 import re
+from htmlentitydefs import name2codepoint as n2cp
 
 # twisted
 from twisted.words.protocols import irc
@@ -119,7 +120,8 @@ class IRCBot(irc.IRCClient):
         for message in self.campfire.messages():
             message = CampfireMessageFilter.filter_message(message)
             msg = "%s: %s" % (message['person'], message['message'])
-            self.msg(self.channel, msg)
+            msg = self.decode_htmlentities(msg.decode('unicode_escape'))
+            self.msg(self.channel, str(msg))
             self.log(self.channel, self.nickname, msg)
 
     # irc callbacks
@@ -128,7 +130,8 @@ class IRCBot(irc.IRCClient):
         self.join(self.channel)
 
     def joined(self, channel):
-        self.msg(channel, "I'm room '%s' in the %s campfire." % (self.factory.room, self.factory.subdomain))
+        self.msg(channel, "I'm room '%s' in the %s campfire." %
+                 (self.factory.room, self.factory.subdomain))
 
     def irc_PING(self, prefix, params):
         irc.IRCClient.irc_PING(self, prefix, params)
@@ -151,6 +154,30 @@ class IRCBot(irc.IRCClient):
     def __str__(self):
         return "<%s: %s as %s>" % (IRC_SERVER, self.channel, self.nickname)
 
+    def decode_htmlentities(self, string):
+        """
+        Decode HTML entities-hex, decimal, or named-in a string
+        @see http://snippets.dzone.com/posts/show/4569
+        @see http://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py
+        """
+        def substitute_entity(match):
+            ent = match.group(3)
+            if match.group(1) == "#":
+                # decoding by number
+                if match.group(2) == '':
+                    # number is in decimal
+                    return unichr(int(ent))
+                elif match.group(2) == 'x':
+                    # number is in hex
+                    return unichr(int('0x'+ent, 16))
+            else:
+                # they were using a name
+                cp = n2cp.get(ent)
+                if cp: return unichr(cp)
+                else: return match.group()
+
+        entity_re = re.compile(r'&(#?)(x?)(\w+);')
+        return entity_re.subn(substitute_entity, string)[0]
 
 class IRCBotFactory(protocol.ClientFactory):
     """
