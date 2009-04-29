@@ -167,6 +167,16 @@ class IRCBot(irc.IRCClient):
         irc.IRCClient.irc_PING(self, prefix, params)
         self.campfire.ping()
 
+    def action(self, user, channel, data):
+        user = user.split('!')[0]
+        action = '*' + data + '*'
+
+        if user == BLESSED_USER:
+            self.campfire.speak(action)
+
+        self.log(channel, user, action)
+
+
     def privmsg(self, user, channel, msg):
         user = user.split('!')[0]
 
