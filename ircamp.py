@@ -79,6 +79,18 @@ class CampfireMessageFilter(MessageFilter):
         self.soup = BeautifulSoup(message['message'].decode('unicode_escape'))
 
 
+class ActionFilter(CampfireMessageFilter):
+    def filter(self):
+        if re.search(r'has (entered|left) the room', self.message['message']):
+            pass
+        elif re.search(r'^\*(.+)\*$', self.message['message']):
+            self.message['message'] = self.message['message'].replace('*', '')
+        else:
+            self.message['person'] = self.message['person'] + ':'
+
+        return self.message
+
+
 class PasteFilter(CampfireMessageFilter):
     def filter(self):
         paste = self.soup.find('pre')
@@ -137,7 +149,7 @@ class IRCBot(irc.IRCClient):
         self.campfire.ping()
         for message in self.campfire.messages():
             message = CampfireMessageFilter.filter_message(message)
-            msg = "%s: %s" % (message['person'], message['message'])
+            msg = "%s %s" % (message['person'], message['message'])
             msg = self.decode_htmlentities(msg.decode('unicode_escape'))
             self.speak(msg)
 
