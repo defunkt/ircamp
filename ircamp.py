@@ -157,6 +157,7 @@ class IRCBot(irc.IRCClient):
 
     def signedOn(self):
         self.join(self.channel)
+        self.commands = IRCCommands(campfire=self.campfire, irc=self)
 
     def joined(self, channel):
         self.speak("Room '%s' in %s: %s" %
@@ -179,12 +180,21 @@ class IRCBot(irc.IRCClient):
 
     def privmsg(self, user, channel, msg):
         user = user.split('!')[0]
+        self.log(channel, user, msg)
 
         if user == BLESSED_USER:
-            msg = IRCMessageFilter.filter_message(msg)
-            self.campfire.speak(msg)
+            if self.iscommand(msg):
+                parts = msg.split(' ')
+                command = parts[1]
+                args = parts[2:]
+                out = self.commands._send(command, args)
+                self.speak(out)
+            else:
+                out = IRCMessageFilter.filter_message(msg)
+                self.campfire.speak(out)
 
-        self.log(channel, user, msg)
+    def iscommand(self, msg):
+        return BOT_NAME in msg.split(' ')[0]
 
     # other bot methods
 
@@ -247,6 +257,43 @@ class IRCBotFactory(protocol.ClientFactory):
     def clientConnectionFailed(self, connector, reason):
         print "connection failed:", reason
         reactor.stop()
+
+class IRCCommands(object):
+    """
+    Commands the IRC bot responds to.
+
+    Each method is a command, passed all subsequent words.
+
+    e.g.
+
+    <defunkt> bot: help
+    calls: bot.help()
+
+    <defunkt> bot: guest on
+    calls: bot.guest('on')
+
+    Returning a non-empty string replies to the channel.
+    """
+    def __init__(self, campfire, irc):
+        self.campfire = campfire
+        self.irc = irc
+
+    def _send(self, command, args):
+        """Dispatch method. Not a command."""
+        try:
+            method = getattr(self, command)
+            return method(args)
+        except:
+            return ''
+
+    def help(self, args):
+        methods = dir(self)
+        methods.remove('_send')
+        methods = [x for x in methods if not '__' in x and type(getattr(self, x)) == type(self._send)]
+        return "I know these commands: " + ', '.join(methods)
+
+    def users(self, args):
+        return ', '.join(self.campfire.users())
 
 
 if __name__ == '__main__':
