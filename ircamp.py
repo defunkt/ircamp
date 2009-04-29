@@ -147,11 +147,14 @@ class IRCBot(irc.IRCClient):
 
     def new_messages_from_campfire(self):
         self.campfire.ping()
-        for message in self.campfire.messages():
-            message = CampfireMessageFilter.filter_message(message)
-            msg = "%s %s" % (message['person'], message['message'])
-            msg = self.decode_htmlentities(msg.decode('unicode_escape'))
-            self.speak(msg)
+        try:
+            for message in self.campfire.messages():
+                message = CampfireMessageFilter.filter_message(message)
+                msg = "%s %s" % (message['person'], message['message'])
+                msg = self.decode_htmlentities(msg.decode('unicode_escape'))
+                self.speak(msg)
+        except socket.timeout:
+            pass
 
     # irc callbacks
 
